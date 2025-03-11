@@ -2201,7 +2201,7 @@ class ApiController extends Controller
     public function test(Request $request) {
         return [
             'success' => true,
-            'message' =>Auth::id(),
+            // 'message' =>Auth::id(),
         ];
 
         $query = Order::where(function ($query) use ($request) {
