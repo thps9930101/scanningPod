@@ -23,6 +23,7 @@ use OpenSpout\Common\Entity\Row;
 //login
 Route::post('/login',[ApiController::class, 'login']);
 Route::post('/company_login',[ApiController::class, 'company_login']);
+Route::post('/staff_login',[ApiController::class, 'staff_login']);
 
 //staff login
 Route::post('/staffLogin',[StaffController::class, 'login']);
@@ -48,13 +49,21 @@ Route::post('/getUserData',[ApiController::class, 'getUserData']);
 Route::post('/company_CheckLevel',[ApiController::class, 'company_CheckLevel']);
 Route::post('/editMaterials',[ApiController::class, 'editMaterials']);
 Route::post('/editModels',[ApiController::class, 'editModels']);
-Route::post('/getModelVersion',[ApiController::class, 'getModelVersion']);
-Route::post('/getAllTimes',[ApiController::class, 'getAllTimes']);
-Route::post('/getAllTimesByArray',[ApiController::class, 'getAllTimesByArray']);
-Route::post('/editTimes',[ApiController::class, 'editTimes']);
-Route::post('/getCompanyUserAllBC',[ApiController::class, 'getCompanyUserAllBC']);
-Route::post('/testEnc',[ApiController::class, 'testEnc']);
-Route::post('/changeFrontBack',[ApiController::class, 'changeFrontBack']);
+Route::post('/getModelRemark',[ApiController::class, 'getModelRemark']);
+Route::post('/addRemark',[ApiController::class, 'addRemark']);
+Route::post('/removeRemark',[ApiController::class, 'removeRemark']);
+Route::post('/uploadModel',[ApiController::class, 'uploadModel']);
+Route::post('/addOrder',[ApiController::class, 'addOrder']);
+Route::post('/getMachineStatus',[ApiController::class, 'getMachineStatus']);
+Route::post('/uploadPicture',[ApiController::class, 'uploadPicture']);
+Route::post('/methodSuccessful',[ApiController::class, 'methodSuccessful']);
+
+
+//===NEW===
+Route::post('/get_modelList',[ApiController::class, 'get_modelList']);
+
+
+
 // Route::post('/encAllfile',[ApiController::class, 'encAllfile']);
 Route::post('/getAllUser',[ApiController::class, 'getAllUser']);
 // Route::post('/getTimesOrder',[ApiController::class, 'getTimesOrder']);
@@ -118,7 +127,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/rollback_model',[ApiController::class, 'rollback_model']);
     Route::post('/addMaterials',[ApiController::class, 'addMaterials']);
 
-
     Route::get('/user',[UserController::class, 'profile']);
 
     // Route::get('/getPoints',[UserController::class, 'getPoints']);
@@ -168,8 +176,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
      //resend confirmation mail
     Route::post('/sendConfirmEmail',[ApiController::class, 'sendConfirmEmail']);
 
-    //upload picture from frontend
-    Route::post('/uploadPicture',[ApiController::class, 'uploadPicture']);
 
     //upload cropped pics from frontend
     Route::post('/uploadCanvas',[ApiController::class, 'uploadCanvas']);
