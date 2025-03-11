@@ -375,10 +375,10 @@ class ApiController extends Controller
             ];
         }
 
-        $machine = machine::where('id', $request->MID)->first();
-        $machine->status = 1;
-        $machine->user = $request->UID;
-        $machine->save();
+        // $machine = machine::where('id', $request->MID)->first();
+        // $machine->status = 1;
+        // $machine->user = $request->UID;
+        // $machine->save();
 
         return [
             'success' => true
@@ -2199,8 +2199,8 @@ class ApiController extends Controller
     }
 
     public function test(Request $request) {
-        Log::info('Test log');
-        Log::error('Test log');
+        // Log::info('Test log');
+        // Log::error('Test log');
         return [
             'success' => true,
             // 'message' =>Auth::id(),
