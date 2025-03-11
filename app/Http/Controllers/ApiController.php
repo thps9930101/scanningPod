@@ -2199,6 +2199,8 @@ class ApiController extends Controller
     }
 
     public function test(Request $request) {
+        Log::info('Test log');
+        Log::error('Test log');
         return [
             'success' => true,
             // 'message' =>Auth::id(),
