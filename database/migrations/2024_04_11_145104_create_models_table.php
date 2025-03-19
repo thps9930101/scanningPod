@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('models', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('mesh_url')->nullable();;
+            $table->string('texture_url')->nullable();;
+            $table->integer('status')->default(0);
             $table->timestamps();
-            $table->string('account')->unique();
-            $table->string('name');
-            $table->string('password');
-            $table->tinyInteger('level'); 
-            $table->string('token');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('models');
     }
 };

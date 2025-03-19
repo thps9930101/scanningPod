@@ -19,9 +19,9 @@ return new class extends Migration
             //$table->timestamp('email_verified_at')->nullable();
             $table->string('phone')->nullable();
             $table->string('password');
-            $table->string('address')->nullable();;
-            $table->string('fax')->nullable();;
-            $table->integer('download_time')->default(0);;
+            // $table->string('address')->nullable();
+            // $table->string('fax')->nullable();
+            // $table->integer('download_time')->default(0);
             //user types tiny integer
             //$table->boolean('is_admin')->default(false);
             //confirm code

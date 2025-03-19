@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('machine_id')->constrained()->onDelete('cascade');
+            $table->integer('status')->default(0);
             $table->timestamps();
-            $table->string('account')->unique();
-            $table->string('name');
-            $table->string('password');
-            $table->tinyInteger('level'); 
-            $table->string('token');
         });
     }
 
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('orders');
     }
 };
