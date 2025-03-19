@@ -370,15 +370,32 @@ class ApiController extends Controller
         if($validator->fails()){
             return [
                 'success' => false,
-                'message' => __('register.failed'),
+                'message' => "資料缺失",
                 'errors'=> $validator->errors()->toArray()
             ];
         }
 
-        // $machine = machine::where('id', $request->MID)->first();
-        // $machine->status = 1;
-        // $machine->user = $request->UID;
-        // $machine->save();
+        $machine = machine::where('id', $request->MID)->first();
+
+        if(!$machine)
+        {
+            return [
+                'success' => false,
+                'message' => "機器不存在",
+            ];
+        }
+
+        if($machine->status == 1)
+        {
+            return [
+                'success' => false,
+                'message' => "機器正在使用，無法開啟",
+            ];
+        }
+
+        $machine->status = 1;
+        $machine->user = $request->UID;
+        $machine->save();
 
         return [
             'success' => true
@@ -997,6 +1014,30 @@ class ApiController extends Controller
         return[
             'success' =>true,
             'message'=>auth::user()
+        ];
+    }
+
+    public function getCompanyToken(Request $request){
+        $validator = Validator::make($request->all(),[
+            'MID' => 'required',
+        ]);
+
+        if($validator->fails()){
+            return [
+                'success' => false,
+                'message' => __('register.failed'),
+                'errors'=> $validator->errors()->toArray()
+            ];
+        }
+        
+        $machine = Machine::where('id', $request->MID)->first();
+
+        $company = Companies::where('id',$machine->company_id)->first();
+        
+
+        return [
+            'success' => true,
+            'message' => $company->token
         ];
     }
 
