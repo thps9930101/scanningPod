@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掃描艙_訂單</title>
+
+    <!-- 引入 CSS -->
+    <!-- <link rel="stylesheet" href="./css/font-awesome.css">     -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="./css/bootstrap.css">
+    <!-- <link rel="stylesheet" href="./css/tailwind.css"> -->
+
+    <!-- 引入 JavaScript -->
+    <script src="./js/jquery.js"></script>
+    <script src="./js/bootstrap.js"></script>
+    <script src="./js/font-awesome.js"></script>
+    <script src="./js/tailwind.js"></script> <!-- 假設您有 Tailwind JS 文件 -->
+    <script src="./js/axios.js" defer></script>
+    <script src="./js/flowbite.js" defer></script>
+    <script src="./js/sweetalert.js" defer></script>
+    <script src="./js/api.js" defer></script> <!-- 新增的 API 類別檔案 -->
+    <script src="./js/main.js" defer></script> <!-- 新增的主程式檔案 -->
+    <script src="./js/jszip.min.js" defer></script> <!-- zip -->
+
+</head>
+
+<body class="bg-gray-900 relative h-[100dvh] w-full overflow-hidden" style="height: 100dvh !important;">
+    <!-- 登入模態視窗 -->
+    <div class="w-full h-full flex items-center justify-center" id="loginModal">
+        <div class="bg-white w-96 rounded p-10 flex items-center justify-center">
+            <div class="w-full flex flex-col">
+                <h2 class="text-4xl font-bold mb-6 text-center">Login</h2>
+
+                <!-- 使用者名稱輸入 -->
+                <div class="mb-4 flex items-center h-12">
+                    <i class="fa-solid fa-user text-2xl text-gray-700 mr-4"></i>
+                    <input type="text" class="bg-sky-50 flex-grow rounded px-4 py-2" placeholder="Username" value="test1" />
+                </div>
+
+                <!-- 密碼輸入 -->
+                <div class="mb-4 flex items-center h-12">
+                    <i class="fa-solid fa-lock text-2xl text-gray-700 mr-4"></i>
+                    <input type="password" class="bg-sky-50 flex-grow rounded px-4 py-2" placeholder="Password" value="test1" />
+                </div>
+
+                <!-- 忘記密碼 -->
+                <!-- <div class="w-full flex justify-end mb-6">
+                    <a href="#" class="text-sm text-gray-400 hover:underline">Forget password?</a>
+                </div> -->
+
+                <!-- 按鈕區 -->
+                <div class="flex flex-col space-y-4">
+                    <button class="w-full h-12 rounded bg-sky-950 text-white font-semibold hover:bg-sky-800" onclick="signIn()">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主內容 -->
+    <div id="mainContent" class="flex flex-col w-full h-full p-[20px] overflow-hidden hidden">
+        <!-- 頁面頂部標籤 -->
+        <header class="flex w-full justify-between items-center bg-gray-800 text-white px-10 py-2 rounded-t">
+            <div class="text-lg font-semibold">掃描艙_訂單</div>
+            <div class="flex text-left items-center">
+                <div id="user_account" class="flex items-center w-[50px] h-full mr-4"></div>
+                <div class="relative inline-block">
+                    <button id="settingsButton" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none" type="button">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <!-- Dropdown menu -->
+                    <div id="settingsDropdown" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 hidden">
+                        <div class="py-1" role="none">
+                            <a href="#" onclick="changePassword()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">變更密碼</a>
+                            <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">登出</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 頁面內容 -->
+        <main class="flex-grow bg-gray-800 rounded-b px-5 py-2 tab-content overflow-hidden">
+            <div id="page-history" class="flex w-full h-full">
+                <div class="max-h-full flex-grow bg-gray-500 flex flex-col items-center text-white text-xl relative">
+                    <!-- 搜尋欄 -->
+                    <!-- <div class="rounded-lg flex mt-4 mb-4 w-11/12 h-[5%]">
+                        <input onkeyup="searchHistory(event)" id="searchInput" type="text" placeholder="輸入檔案名稱" class="flex-grow rounded-l px-4 py-2 text-black" />
+                    </div> -->
+                    <!-- 搜尋欄和排序控制 -->
+                    <div class="rounded-lg flex mt-4 mb-4 w-11/12 justify-between items-center">
+                        <!-- 搜尋欄 -->
+                        <input onkeyup="searchHistory(event)" id="searchInput" type="text" placeholder="輸入檔案名稱" class="flex-grow rounded-l px-4 py-2 text-black" />
+
+                        <!-- 排序控制 -->
+                        <!-- <select id="sortOrder" class="ml-4 p-2 rounded bg-sky-50 text-black" onchange="changeSortOrder()">
+                            <option value="desc">建立時間🔽</option>
+                            <option value="asc">建立時間🔼</option>
+                        </select> -->
+                        <button id="sortOrder" class="ml-4 p-2 rounded bg-gray-200 text-black" onclick="changeSortOrder()">建立時間 ▼</button>
+                    </div>
+
+
+                    <!-- 訂單列表 -->
+                    <div id="history-list" class="w-11/12 h-[85%] overflow-hidden overflow-y-auto pl-2 pr-2">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 注意事項模態視窗 -->
+    <div id="notesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg w-11/12 max-w-md p-6 relative">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl text-gray-800">注意事項</h2>
+                <button onclick="hideNotesModal()" class="text-gray-600 hover:text-gray-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 新增注意事項按鈕 -->
+            <button onclick="addNewNote()" class="absolute top-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+
+            <!-- 注意事項列表 -->
+            <div id="notesList" class="max-h-60 overflow-y-auto mb-4">
+                <!-- 注意事項項目將動態添加到這裡 -->
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end">
+                <button onclick="hideNotesModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上傳模態視窗 -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg w-11/12 max-w-md p-6 relative">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">上傳檔案</h2>
+                <button onclick="hideUploadModal()" class="text-gray-600 hover:text-gray-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 上傳表單 -->
+            <form id="uploadForm" class="flex flex-col space-y-4">
+                <p>模型檔</p>
+                <input type="file" id="modelInput" class="border p-2 rounded">
+                <p>素材檔</p>
+                <input type="file" id="textureInput" class="border p-2 rounded">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    上傳
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="flex justify-end mt-4">
+                <button onclick="hideUploadModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="back" class="w-full h-full fixed top-0 left-0 bg-black bg-opacity-50 hidden">
+
+    </div>
+    <!-- 載入動畫 -->
+    <div id="loader" class="w-full h-full fixed top-0 left-0 bg-white opacity-75 z-50 hidden">
+        <div class="flex justify-center items-center h-full">
+            <div class="fas fa-circle-notch fa-spin fa-5x text-violet-600"></div>
+        </div>
+    </div>
+    <script>
+        
+        /**
+         * 顯示載入動畫
+         */
+         function loader_show() {
+            $("#loader").removeClass('hidden');
+        }
+    
+        /**
+         * 隱藏載入動畫
+         */
+        function loader_hide() {
+            $("#loader").addClass('hidden');
+        }
+    
+    </script>
+</body>
+
+</html>

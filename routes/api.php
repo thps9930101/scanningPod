@@ -57,6 +57,10 @@ Route::post('/addOrder',[ApiController::class, 'addOrder']);
 Route::post('/getMachineStatus',[ApiController::class, 'getMachineStatus']);
 Route::post('/uploadPicture',[ApiController::class, 'uploadPicture']);
 Route::post('/methodSuccessful',[ApiController::class, 'methodSuccessful']);
+Route::post('/getCompanyToken',[ApiController::class, 'getCompanyToken']);
+Route::post('/get_orderList',[ApiController::class, 'get_orderList']);
+Route::post('/downloadPicture',[ApiController::class, 'downloadPicture']);
+Route::post('/downloadModel',[ApiController::class, 'downloadModel']);
 
 
 //===NEW===

@@ -32,7 +32,8 @@ class models extends Model
         'user_id',
         'mesh_url',
         'texture_url',
-        'status'
+        'status',
+        'company_id'
     ];
 
     /**

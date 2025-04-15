@@ -485,8 +485,8 @@ class ApiController extends Controller
             ];
         }
 
-        $remarks = Remark::where('company_id', $company->id)
-                         ->where('model_id', $request->modelId) // 新增条件
+        $remarks = Remark::where('staff_id', $staff->id)
+                         ->where('order_id', $request->modelId) // 新增条件
                          ->get();
 
         $remarks_list= [];
@@ -509,13 +509,13 @@ class ApiController extends Controller
     public function addRemark(Request $request) {
         
         $validator = Validator::make($request->all(),[
-            'token' => 'required',
-            'modelId' => 'required',
+            'account' => 'required',
+            'orderId' => 'required',
             'note' => 'required'
         ]);
         
-        if (!$request->token)
-            abort(415);
+        // if (!$request->token)
+        //     abort(415);
 
         if($validator->fails()){
             return [
@@ -525,9 +525,10 @@ class ApiController extends Controller
             ];
         }
 
-        $company = companies::where('token', $request->token)->first();
+        $staff = staff::where('account', $request->account)->first();
+        // $company = companies::where('token', $request->token)->first();
 
-        if(!$company)
+        if(!$staff)
         {
             abort(415);
             return [
@@ -536,9 +537,9 @@ class ApiController extends Controller
             ];
         }
 
-        $model = models::where('id', $request->modelId)->first();
+        $order = order::where('id', $request->orderId)->first();
 
-        if(!$model)
+        if(!$order)
         {
             return [
                 'success' => false,
@@ -547,8 +548,8 @@ class ApiController extends Controller
         }
 
         $remark = new Remark();
-        $remark->company_id = $company->id;
-        $remark->model_id = $model->id;
+        $remark->staff_id = $staff->id;
+        $remark->order_id = $order->id;
         $remark->remark = $request->note;
         $remark->save();
 
@@ -561,12 +562,9 @@ class ApiController extends Controller
     public function removeRemark(Request $request) {
         
         $validator = Validator::make($request->all(),[
-            'token' => 'required',
+            'account' => 'required',
             'noteId' => 'required'
         ]);
-        
-        if (!$request->token)
-            abort(415);
 
         if($validator->fails()){
             return [
@@ -575,10 +573,11 @@ class ApiController extends Controller
                 'errors'=> $validator->errors()->toArray()
             ];
         }
+        $staff = staff::where('account', $request->account)->first();
 
-        $company = companies::where('token', $request->token)->first();
+        // $company = companies::where('token', $request->token)->first();
 
-        if(!$company)
+        if(!$staff)
         {
             abort(415);
             return [
@@ -605,7 +604,7 @@ class ApiController extends Controller
         ];
     }
 
-    public function get_modelList(Request $request) {
+    public function get_orderList(Request $request) {
         
         $validator = Validator::make($request->all(),[
             'account' => 'required'
@@ -632,25 +631,21 @@ class ApiController extends Controller
         }
 
         $models = models::where('company_id', $company->id)->get();
-
-        $model_list= [];
-        foreach ($models as $model) {  
-            $user = User::where('id',$model->user_id)->first();
-           
-            $model_data = [
+        $order_list= [];
+        foreach ($models as $model) {             
+            $order_data = [
                 'id' => $model->id,
-                'name' => $user->name,
-                'email' => $user->account,
-                'remark' => $model->remark,
+                'email' => $model->account,
+                // 'remark' => $model->remark,
                 'createdAt' => $model->created_at->format('Y-m-d H:i:s')
             ];
 
-            array_push($model_list, $model_data);  
+            array_push($order_list, $order_data);  
         }
 
         return [
             'success' => true,
-            'message' => $model_list
+            'message' => $order_list
         ];
     }
 
@@ -693,11 +688,11 @@ class ApiController extends Controller
     public function uploadModel(Request $request)
     {
         $validator = Validator::make($request->all(),[
-            'orderId' => 'required',
+            'order' => 'required',
+            'account' => 'required',
             'texture' => 'required',
             'model' => 'required'
         ]);
-
         if($validator->fails()){
             return [
                 'success' => false,
@@ -707,6 +702,14 @@ class ApiController extends Controller
         }
 
         $staff = Staff::where('account',$request->account)->first();
+        if(!$staff)
+        {
+            abort(415);
+            return [
+                'success' => false,
+                'message' => "帳號錯誤，請重新登入"
+            ];
+        }
         $company = companies::where('id', $staff->company_id)->first();
 
         if(!$company)
@@ -718,7 +721,7 @@ class ApiController extends Controller
             ];
         }
 
-        $model = models::where('id',$request->orderId)->first();
+        $model = models::where('id',$request->order)->first();
         
         if(!$model)
         {
@@ -728,17 +731,25 @@ class ApiController extends Controller
             ];
         }
 
-        $s3_model_dir = env('APP_ENV') . "/".$company->id."/".$request->order."/"; // 修改这里的设定
-
+        $order = order::where('id', $model->order_id)->first();
+        if(!$order)
+        {
+            return[
+                'success' => false,
+                'message' => "找不到此訂單"
+            ];
+        }
+        $s3_model_dir = env('APP_ENV') . "/".$model->company_id."/".$order->id."/"; // 修改这里的设定
+ 
         $s3_texture_dir = $s3_model_dir."texture";
         $s3_mesh_dir = $s3_model_dir."mesh";
 
         $textureFile = $request->file('texture');
         $meshFile = $request->file('model');
 
-        $s3_texture_fileName = $id . '.' . $textureFile->getClientOriginalExtension();
-        $s3_mesh_fileName = $id . '.' . $meshFile->getClientOriginalExtension();
-
+        $s3_texture_fileName = $request->order . '.' . $textureFile->getClientOriginalExtension();
+        $s3_mesh_fileName = $request->order . '.' . $meshFile->getClientOriginalExtension();
+        
         if (!($textureFile->isValid() && $meshFile->isValid()))
         {
             return [
@@ -1584,7 +1595,8 @@ class ApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'pic' => 'required',
                 'order' => 'required',
-                'token' => 'required'
+                'token' => 'required',
+                'machine' => 'required'
             ]);
 
             if ($validator->fails()) {
@@ -1624,6 +1636,123 @@ class ApiController extends Controller
                     'message' => "檔案上傳失敗，請確認您上傳的檔案是否可用",
                 ];
             }
+            
+            $order = order::where('id', $request->order)->first();
+            if (!$order)
+            {
+                return [
+                    'success' => false,
+                    'message' => "查不到此訂單",
+                ];
+            }
+
+            $machine = Machine::where('id', $request->machine)->first();
+            if (!$machine)
+            {
+                return [
+                    'success' => false,
+                    'message' => "查不到此機台",
+                ];
+            }
+            $machine->status = 0;
+            $machine->save();
+
+            $model = new models();
+            $model->order_id = $order->id;
+            $model->company_id = $company->id;
+            $model->status = 0;
+            $model->pic_url = $s3_pic_dir . '/' . $s3_picture_fileName;
+            $model->save();
+        }
+        catch(e) {
+            return [
+                'success' => false,
+                'message' => e.message,
+            ];
+        }
+    }
+
+    public function downloadPicture(Request $request)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'account' => 'required',
+                'model' => 'required',
+            ]);
+            
+            if ($validator->fails()) {
+                return [
+                    'success' => false,
+                    'message' => 'uploadImageFailed',
+                    'errors' => $validator->errors()->toArray()
+                ];
+            }
+
+            $staff = staff::where('account', $request->account)->first();
+
+            $model = models::where('id', $request->model)->first();
+
+            if(!$model)
+            {
+                return [
+                    'success' => false,
+                    'message' => "查不到此訂單",
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => [
+                    "picture" => Storage::disk('s3')->temporaryUrl($model->pic_url, now()->addHour())
+                ]
+            ];
+            
+
+        }
+        catch(e) {
+            return [
+                'success' => false,
+                'message' => e.message,
+            ];
+        }
+    }
+
+    public function downloadModel(Request $request)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'account' => 'required',
+                'model' => 'required',
+            ]);
+            
+            if ($validator->fails()) {
+                return [
+                    'success' => false,
+                    'message' => 'uploadImageFailed',
+                    'errors' => $validator->errors()->toArray()
+                ];
+            }
+
+            $staff = staff::where('account', $request->account)->first();
+
+            $model = models::where('id', $request->model)->first();
+
+            if(!$model)
+            {
+                return [
+                    'success' => false,
+                    'message' => "查不到此訂單",
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => [
+                    "files" => [Storage::disk('s3')->temporaryUrl($model->mesh_url, now()->addHour()),
+                                Storage::disk('s3')->temporaryUrl($model->texture_url, now()->addHour())]
+                ]
+            ];
+            
 
         }
         catch(e) {
