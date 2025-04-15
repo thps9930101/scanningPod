@@ -1043,8 +1043,23 @@ class ApiController extends Controller
         
         $machine = Machine::where('id', $request->MID)->first();
 
+        if(!$machine)
+        {
+            return [
+                'success' => false,
+                'message' => '找不到此機器'
+            ];
+        }
+
         $company = Companies::where('id',$machine->company_id)->first();
         
+        if(!$company)
+        {
+            return [
+                'success' => false,
+                'message' => '此機器無公司'
+            ];
+        }
 
         return [
             'success' => true,
@@ -1609,6 +1624,14 @@ class ApiController extends Controller
 
             $company = companies::where('token',$request->token)->first();
 
+            if(!$company)
+            {
+                return [
+                    'success' => false,
+                    'message' => "查不到此公司",
+                ];
+                
+            }
             $s3_pic_dir = env('APP_ENV') . "/".$company->id."/".$request->order."/"."picture"; // 修改这里的设定
             
             $picFile = $request->file('pic');
