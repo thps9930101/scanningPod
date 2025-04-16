@@ -1607,6 +1607,7 @@ class ApiController extends Controller
      */
     public function uploadPicture(Request $request) {
         try{
+            $totalStart = microtime(true);
             $validator = Validator::make($request->all(), [
                 'pic' => 'required',
                 'order' => 'required',
@@ -1693,6 +1694,8 @@ class ApiController extends Controller
             $model->status = 0;
             $model->pic_url = $s3_pic_dir . '/' . $s3_picture_fileName;
             $model->save();
+            $totalEnd = microtime(true);
+            Log::info("total spend: " . ($totalEnd - $totalStart));
         }
         catch(e) {
             return [
