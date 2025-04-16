@@ -1630,11 +1630,12 @@ class ApiController extends Controller
                     'success' => false,
                     'message' => "查不到此公司",
                 ];
-                
             }
             $s3_pic_dir = env('APP_ENV') . "/".$company->id."/".$request->order."/"."picture"; // 修改这里的设定
             
+            $t1 = microtime(true);
             $picFile = $request->file('pic');
+            $t2 = microtime(true);
     
             $s3_picture_fileName = $request->order . '.' . $picFile->getClientOriginalExtension();
             
@@ -1648,9 +1649,15 @@ class ApiController extends Controller
     
             $isAllUploaded = true;
             
+            $storeStart = microtime(true);
             if (!$picFile->storeAs($s3_pic_dir, $s3_picture_fileName, 's3'))
                 $isAllUploaded = false;
+            $storeEnd = microtime(true);
     
+                        
+            Log::info("receive spend: " . ($t2 - $t1));
+            Log::info("storeAs spend: " . ($storeEnd - $storeStart));
+
             if (!$isAllUploaded)
             {
                 // 刪掉該 $s3_model_dir 資料夾
