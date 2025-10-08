@@ -335,11 +335,52 @@ class ApiController extends Controller
         $order->machine_id = $machine->id;
         $order->method = $request->method;
         $order->account = $request->account;
+        $order->times = 5;
         $order->save();
 
         return [
             'success' => true,
             'message' => $order->id
+        ];
+    }
+
+    public function reduceTimes(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            'orderID' => 'required',
+        ]);
+
+        $orderID = $request->input('orderID');
+        $order = order::where('id', $orderID)->first();
+        if(!$order)
+        {
+            return [
+                'success' => false,
+                'message' => "查無此訂單"
+            ];
+        }
+
+        if($order->times <= 0)
+        {
+            return [
+                'success' => false,
+                // 'message' => "該名片以達到使用上限，你也想要擁有3D名片嗎? 請洽 : <a href=''>法鬥文創</a>"
+                'message' => "使用次數已用完"
+            ];
+        }
+
+        if($order->times >0)
+        {
+            $order->times -= 1;
+        }
+        
+        $order->save();
+
+        return [
+            'success' => true,
+            'message' => [
+                'times' => $order->times
+            ]
         ];
     }
 
@@ -424,6 +465,41 @@ class ApiController extends Controller
             ];
         }
         
+        return [
+            'success' => true,
+            'message' => [       
+                'user' => $machine->user,
+                'status' => $machine->status
+            ]
+        ];
+    }
+
+    public function setMachineStatus(Request $request){
+        $validator = Validator::make($request->all(),[
+            'MID' => 'required',
+            'status' => 'required'
+        ]);
+
+        if($validator->fails()){
+            return [
+                'success' => false,
+                'message' => __('register.failed'),
+                'errors'=> $validator->errors()->toArray()
+            ];
+        }
+
+        $machine = machine::where('id', $request->MID)->first();
+
+        if (!$machine) {
+            return [
+                'success' => false,
+                'message' => 'Machine not found'
+            ];
+        }
+        
+        $machine->status = 0;
+        $machine->save();
+
         return [
             'success' => true,
             'message' => [       
@@ -1602,6 +1678,57 @@ class ApiController extends Controller
         }
     }
 
+    public function getModel(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'orderID' => 'required',
+        ]);
+
+        $model = models::where('order_id', $request->orderID)->first();
+        if(!$model)
+        {
+            return [
+                'success' => false,
+                'message' => "查不到此模型",
+            ];
+        }
+
+        $order = order::where('id', $request->orderID)->first();
+        if(!$order)
+        {
+            return [
+                'success' => false,
+                'message' => "查不到此訂單",
+            ];
+        }
+
+        if($order->times <= 0)
+        {
+            return [
+                'success' => false,
+                'message' => "使用次數已無"
+            ];
+        }
+
+        $model_Result = [
+            'success' => true,
+            'message' => [
+                'model' =>[
+                    'texture' => $model->texture_url,
+                    'mesh' => $model->mesh_url,
+                    'version' => $model->version
+                ]
+            ],
+        ];
+
+        if ($model_Result['message']["model"]["texture"] != '')
+            $model_Result['message']["model"]["texture"] = Storage::disk('s3')->temporaryUrl($model_Result['message']["model"]["texture"], now()->addHour());
+        if ($model_Result['message']["model"]["mesh"] != '')
+            $model_Result['message']["model"]["mesh"] = Storage::disk('s3')->temporaryUrl($model_Result['message']["model"]["mesh"], now()->addHour());
+
+        return $model_Result;
+    }
+
     /**
      * upload picture
      */
@@ -1685,8 +1812,18 @@ class ApiController extends Controller
                     'message' => "查不到此機台",
                 ];
             }
+
+            if($order->method == "mail")
+            {
+                Log::info("mail send");
+                $order->notify(new ClickTimesRemind());
+            }
+
             $machine->status = 0;
             $machine->save();
+
+            $order->status = 1;
+            $order->save();
 
             $model = new models();
             $model->order_id = $order->id;
@@ -1696,6 +1833,14 @@ class ApiController extends Controller
             $model->save();
             $totalEnd = microtime(true);
             Log::info("total spend: " . ($totalEnd - $totalStart));
+            return [
+                'success' => true,
+                'message' => 
+                    [
+                        'method' => $order->method,
+                        'account' => $order->account    
+                    ]
+            ];
         }
         catch(e) {
             return [
