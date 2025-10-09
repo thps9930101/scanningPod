@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Jobs\GitPull;
 use Illuminate\Support\Facades\Log;
 use OpenSpout\Common\Entity\Row;
+use App\Http\Controllers\LineWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,9 @@ Route::post('/getCompanyToken',[ApiController::class, 'getCompanyToken']);
 Route::post('/get_orderList',[ApiController::class, 'get_orderList']);
 Route::post('/downloadPicture',[ApiController::class, 'downloadPicture']);
 Route::post('/downloadModel',[ApiController::class, 'downloadModel']);
+Route::post('/getModel',[ApiController::class, 'getModel']);
+Route::post('/setMachineStatus',[ApiController::class, 'setMachineStatus']);
+Route::post('/line/webhook', [LineWebhookController::class, 'handle']);
 
 
 //===NEW===
