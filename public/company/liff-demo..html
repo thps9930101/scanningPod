@@ -1,0 +1,38 @@
+<!-- public/liff-demo.html -->
+<!doctype html>
+<meta charset="utf-8" />
+<title>LIFF Demo</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<body>
+<h3>LIFF Demo</h3>
+<pre id="log"></pre>
+<script>
+const log = (...a)=>{document.getElementById('log').textContent += a.join(' ')+'\n'}
+
+;(async () => {
+  try {
+    await liff.init({ liffId: '2008262199-mP71nXJR' })
+    if (!liff.isLoggedIn()) return liff.login()
+
+    const profile = await liff.getProfile()  // { userId, displayName, ... }
+    log('Hello,', profile.displayName, profile.userId)
+
+    // 回傳後端註冊並請後端推播
+    const res = await fetch('https://scanningpod.lightmatrix3d.com/api/line/register-and-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: profile.userId,
+        name: profile.displayName,
+        campaign: new URLSearchParams(location.search).get('c') || null
+      }),
+      credentials: 'include'
+    })
+    const json = await res.json()
+    log('Server:', JSON.stringify(json))
+  } catch (e) {
+    log('Error:', e && e.message)
+  }
+})();
+</script>
+</body>
