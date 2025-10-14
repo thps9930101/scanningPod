@@ -4,26 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>照相艙登入</title>
-
-  <!-- Tailwind（Flowbite 需要 Tailwind，這裡用 CDN 版即可） -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Flowbite（若未使用其元件可省略） -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-  <style>
-    body { background: #f8fafc; } /* 淡灰底 */
-  </style>
+  <style>body{background:#f8fafc}</style>
 </head>
 <body class="min-h-screen flex items-center justify-center">
 
-  <!-- Card -->
   <div class="w-full max-w-md mx-4">
     <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-      <!-- Header -->
       <div class="flex items-center gap-3 mb-4">
         <div class="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
           <span class="text-indigo-600 text-lg font-semibold">LIFF</span>
@@ -34,18 +24,17 @@
         </div>
       </div>
 
-      <!-- Loading State -->
+      <!-- Loading -->
       <div id="state-loading" class="flex flex-col items-center justify-center py-8">
-        <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" viewBox="0 0 24 24" fill="none">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
         </svg>
         <p class="text-gray-700 font-medium">載入中…</p>
         <p class="text-gray-500 text-sm">正在初始化帳號並送出資料</p>
       </div>
 
-      <!-- Success State -->
+      <!-- Success -->
       <div id="state-success" class="hidden">
         <div class="flex items-center gap-2 text-emerald-600 mb-3">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none">
@@ -63,7 +52,7 @@
         </div>
       </div>
 
-      <!-- Error State -->
+      <!-- Error -->
       <div id="state-error" class="hidden">
         <div class="flex items-center gap-2 text-rose-600 mb-3">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none">
@@ -76,7 +65,6 @@
         </div>
       </div>
 
-      <!-- 診斷日誌（可收合/隱藏） -->
       <details class="mt-4">
         <summary class="text-sm text-gray-600 cursor-pointer">顯示除錯日誌</summary>
         <pre id="log" class="mt-2 text-xs text-gray-600 whitespace-pre-wrap"></pre>
@@ -87,16 +75,11 @@
   <script>
     const $ = (id)=>document.getElementById(id)
     const log = (...a)=>{ $('log').textContent += a.join(' ') + '\n' }
+    function showState(which){ for (const id of ['state-loading','state-success','state-error']) { $(id).classList.toggle('hidden', id!==which) } }
 
-    function showState(which) {
-      for (const id of ['state-loading','state-success','state-error']) {
-        $(id).classList.toggle('hidden', id !== which)
-      }
-    }
-
-    // 取得 URL 參數（同時支援 ?query 與 hash 中的 ?query）
-    function getParam(name) {
-      const url = new URL(window.location.href);
+    // 支援 ?query 與 hash 中的 ?query
+    function getParam(name){
+      const url = new URL(location.href);
       let v = url.searchParams.get(name);
       if (v !== null) return v;
       if (url.hash && url.hash.includes('?')) {
@@ -107,57 +90,57 @@
       return null;
     }
 
-    ;(async () => {
+    // 進頁面先快取 mid/campaign，避免跳轉後遺失
+    (function cacheParams(){
+      const m = getParam('mid'); const c = getParam('c');
+      if (m) sessionStorage.setItem('mid', m);
+      if (c) sessionStorage.setItem('campaign', c);
+    })();
+
+    (async () => {
       try {
-        showState('state-loading')
+        showState('state-loading');
 
-        await liff.init({ liffId: '2008262199-mP71nXJR' })
-        if (!liff.isLoggedIn()) return liff.login()
+        await liff.init({ liffId: '2008262199-mP71nXJR' });
+        if (!liff.isLoggedIn()) return liff.login({ redirectUri: location.href });
 
-        const profile  = await liff.getProfile()     // { userId, displayName, ... }
-        const campaign = getParam('c')   || null
-        const mid      = getParam('mid') || null
+        const profile = await liff.getProfile();
 
-        log('Hello,', profile.displayName, profile.userId)
-        if (mid) log('mid:', mid)
-        if (campaign) log('campaign:', campaign)
+        // 取得參數：URL 優先，否則用快取
+        const mid = getParam('mid') ?? sessionStorage.getItem('mid') ?? null;
+        const campaign = getParam('c') ?? sessionStorage.getItem('campaign') ?? null;
 
-        // 顯示基本資訊（成功視圖用）
-        $('userName').textContent = profile.displayName || ''
-        $('userId').textContent   = profile.userId || ''
-        $('midVal').textContent   = mid ?? '—'
-        $('campaignVal').textContent = campaign ?? '—'
+        log('Hello,', profile.displayName, profile.userId);
+        if (mid) log('mid:', mid);
+        if (campaign) log('campaign:', campaign);
 
-        // 送到後端
-        // const api = "https://scanningpod.lightmatrix3d.com/api/line/register-and-push"
-        // const { data } = await axios.post(api, {
-        //   userId: profile.userId,
-        //   name:   profile.displayName,
-        //   campaign,
-        //   mid
-        // }, {
-        //   withCredentials: true,
-        //   timeout: 30000
-        // })
+        // 顯示基本資訊
+        $('userName').textContent = profile.displayName || '';
+        $('userId').textContent   = profile.userId || '';
+        $('midVal').textContent   = mid ?? '—';
+        $('campaignVal').textContent = campaign ?? '—';
 
-        const api = "https://scanningpod.lightmatrix3d.com/api/methodSuccessful"
-        const { data } = await axios.post(api, {
-          UID: profile.userId,
-          MID: mid
-        }, {
-          withCredentials: true,
-          timeout: 30000
-        })
+        // 可選：把遺失的參數補回網址（不重整）
+        // if (!getParam('mid') && mid) {
+        //   const u = new URL(location.href);
+        //   u.searchParams.set('mid', mid);
+        //   if (campaign && !getParam('c')) u.searchParams.set('c', campaign);
+        //   history.replaceState(null, '', u.toString());
+        // }
 
-        log('Server:', JSON.stringify(data))
-        $('serverJson').textContent = JSON.stringify(data, null, 2)
-        showState('state-success')
+        // 送到後端（依你指定）
+        const api = "https://scanningpod.lightmatrix3d.com/api/methodSuccessful";
+        const { data } = await axios.post(api, { UID: profile.userId, MID: mid }, { withCredentials: true, timeout: 30000 });
+
+        log('Server:', JSON.stringify(data));
+        $('serverJson').textContent = JSON.stringify(data, null, 2);
+        showState('state-success');
 
       } catch (e) {
-        console.error(e)
-        const msg = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || String(e))
-        $('errorText').textContent = '無法連接伺服器或請求失敗：\n' + msg
-        showState('state-error')
+        console.error(e);
+        const msg = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || String(e));
+        $('errorText').textContent = '無法連接伺服器或請求失敗：\n' + msg;
+        showState('state-error');
       }
     })();
   </script>
