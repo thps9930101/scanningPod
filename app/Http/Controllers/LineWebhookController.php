@@ -47,7 +47,8 @@ class LineWebhookController extends Controller
             if ($msg !== '') {
                 $messages[] = ['type' => 'text', 'text' => $msg];
             }
-            if ($link !== '') {
+            if ($link !== '') 
+            {
                 $messages[] = [
                     'type' => 'flex',
                     'altText' => '查看連結',
@@ -58,8 +59,19 @@ class LineWebhookController extends Controller
                             'layout' => 'vertical',
                             'spacing' => 'md',
                             'contents' => [
-                                ['type' => 'text', 'text' => '開啟連結', 'weight' => 'bold', 'size' => 'lg'],
-                                ['type' => 'text', 'text' => $link, 'size' => 'sm', 'color' => '#666', 'wrap' => true],
+                                [
+                                    'type' => 'text',
+                                    'text' => '開啟連結',
+                                    'weight' => 'bold',
+                                    'size' => 'lg',
+                                ],
+                                [
+                                    'type' => 'text',
+                                    'text' => $link,
+                                    'size' => 'sm',
+                                    'color' => '#666666', // ← 改成 6 碼
+                                    'wrap' => true,
+                                ],
                             ],
                         ],
                         'footer' => [
