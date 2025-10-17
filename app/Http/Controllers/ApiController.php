@@ -375,6 +375,15 @@ class ApiController extends Controller
                 $machine->status = 2;
                 $machine->save();
             }
+
+            return [
+            'success' => False,
+            'message' => [
+                'status'           => (int) $machine->status,   // 目前狀態
+                'required_camera'  => $requiredCamera,          // 資料表規定相機數量
+                'error' => "相機數量不符"
+            ]
+        ];
         }
 
         return [
