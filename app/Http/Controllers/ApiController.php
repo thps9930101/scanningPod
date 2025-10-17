@@ -377,13 +377,19 @@ class ApiController extends Controller
             }
 
             return [
-            'success' => False,
-            'message' => [
-                'status'           => (int) $machine->status,   // 目前狀態
-                'required_camera'  => $requiredCamera,          // 資料表規定相機數量
-                'error' => "相機數量不符"
-            ]
-        ];
+                'success' => False,
+                'message' => [
+                    'status'           => (int) $machine->status,   // 目前狀態
+                    'required_camera'  => $requiredCamera,          // 資料表規定相機數量
+                    'error' => "相機數量不符"
+                ]
+            ];
+        }else{
+            // 相同就把 status 改回 0
+            if ((int)$machine->status !== 0) {
+                $machine->status = 0;
+                $machine->save();
+            }
         }
 
         return [
