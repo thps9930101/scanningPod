@@ -65,6 +65,7 @@ Route::post('/downloadModel',[ApiController::class, 'downloadModel']);
 Route::post('/getModel',[ApiController::class, 'getModel']);
 Route::post('/setMachineStatus',[ApiController::class, 'setMachineStatus']);
 Route::post('/line/register-and-push', [LineWebhookController::class, 'registerAndPush']);
+Route::post('/checkCamera', [ApiController::class, 'checkCamera']);
 
 
 //===NEW===

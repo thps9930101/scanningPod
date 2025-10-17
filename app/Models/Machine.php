@@ -15,5 +15,7 @@ class Machine extends Model
         'name',
         'type',
         'description',
+        'camera',
+        'status' //0: 未使用 1: 使用中 2: 故障
     ];
 }

@@ -344,6 +344,49 @@ class ApiController extends Controller
         ];
     }
 
+    public function checkCamera(Request $request)
+    {
+        // 驗證：MID 必填且存在於 machines.id；camera 必須是非負整數
+        $validator = Validator::make($request->all(), [
+            'MID'    => 'required',
+            'camera' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('validation.failed'),
+                'errors'  => $validator->errors()->toArray(),
+            ], 422);
+        }
+
+        $mid = (int) $request->input('MID');
+        $currentCamera = (int) $request->input('camera');
+
+        // 取得機器資料
+        $machine = Machine::find($mid);
+        // 假設 machines.camera 欄位存的是「規定相機數量」（整數）
+        $requiredCamera = (int) ($machine->camera ?? 0);
+
+        // 不相同就把 status 改成 2
+        if ($currentCamera !== $requiredCamera) {
+            // 只有在不是 2 的情況下才更新，避免一直寫 DB
+            if ((int)$machine->status !== 2) {
+                $machine->status = 2;
+                $machine->save();
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => [
+                'status'           => (int) $machine->status,   // 目前狀態
+                'required_camera'  => $requiredCamera,          // 資料表規定相機數量
+            ]
+        ];
+    }
+    
+
     public function reduceTimes(Request $request)
     {
         $validator = Validator::make($request->all(),[
